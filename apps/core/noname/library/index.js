@@ -15057,6 +15057,7 @@ export class Library {
 		"↗↘", // 90
 		"噔噔噔噔噔噔！", // 91
 		"滑动变阻器", // 92
+		"接着奏乐接着舞", // 93
 	];
 	/**
 	 * quickVoice 的分组。start 为该组第一条在 quickVoice 中的下标，
