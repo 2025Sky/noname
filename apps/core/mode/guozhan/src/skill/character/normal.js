@@ -3247,7 +3247,7 @@ export default {
 							// @ts-expect-error 类型系统未来可期
 							return _status.event.choice;
 						})
-						.set("prompt", "暗置" + get.translation(event.target) + "的一张武将牌")
+						.set("prompt", "暗置" + get.translation(target) + "的一张武将牌")
 						.set("choice", choice)
 						.forResult();
 				}
