@@ -3079,7 +3079,7 @@ export default {
 				filter(event, player) {
 					return (
 						// @ts-expect-error 类型系统未来可期
-						event._gz_kuangfued && !player.hasHistory("sourceDamage", evt => evt.card && event.card) && player.countCards("h") > 0
+						event._gz_kuangfued && !player.hasHistory("sourceDamage", evt => evt.card == event.card) && player.countCards("h") > 0
 					);
 				},
 				async content(event, trigger, player) {
