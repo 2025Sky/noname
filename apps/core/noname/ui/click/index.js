@@ -1019,9 +1019,9 @@ export class Click {
 			e.stopPropagation();
 		});
 
-		// 弹窗顶部离窗口顶 50px、底部留 20px，输入框、标题和边距共约 103px，
+		// 弹窗顶部离窗口顶 50px、底部留 20px，输入框、标签栏和边距共约 105px，
 		// 剩下的高度分给聊天记录区和下方的表情 / 快捷语音区，窗口较矮时自动收窄，避免超出窗口底部
-		const popupRoom = ui.window.offsetHeight - 50 - 20 - 103;
+		const popupRoom = ui.window.offsetHeight - 50 - 20 - 105;
 		const historyHeight = Math.max(110, Math.min(300, Math.round(popupRoom * 0.55)));
 		const panelHeight = Math.max(110, Math.min(240, popupRoom - historyHeight));
 
@@ -1114,23 +1114,31 @@ export class Click {
 			list.scrollTop = list.scrollHeight;
 		};
 		uiintro._heightfixed = true;
-		var emotionTitle = ui.create.div(".text.center", "聊天表情", function () {
-			if (emotionTitle.innerHTML == "快捷语音") {
-				emotionTitle.innerHTML = "聊天表情";
-				list2.remove();
-				list3.remove();
-				uiintro.add(list1);
-				while (list2.childNodes.length) {
-					list2.firstChild.remove();
-				}
-			} else {
-				emotionTitle.innerHTML = "快捷语音";
-				list1.remove();
-				list2.remove();
-				uiintro.add(list3);
-			}
+		// 输入框下面两个并排的标签：表情 / 快捷语音。
+		// 在某个表情包里面时，“表情”标签会显示成“表情 › 包名”，点它回到表情包列表
+		var tabEmotion = ui.create.div(".chat-tab", "表情", function () {
+			showTab("emotion");
 		});
-		uiintro.add(emotionTitle);
+		var tabVoice = ui.create.div(".chat-tab", "快捷语音", function () {
+			showTab("voice");
+		});
+		tabEmotion.classList.add("active");
+		var tabBar = ui.create.div(".chat-tabs");
+		tabBar.appendChild(tabEmotion);
+		tabBar.appendChild(tabVoice);
+		uiintro.add(tabBar);
+		const showTab = function (name) {
+			tabEmotion.classList.toggle("active", name == "emotion");
+			tabVoice.classList.toggle("active", name == "voice");
+			tabEmotion.innerHTML = "表情";
+			list1.remove();
+			list2.remove();
+			list3.remove();
+			while (list2.childNodes.length) {
+				list2.firstChild.remove();
+			}
+			uiintro.add(name == "voice" ? list3 : list1);
+		};
 		var list1 = ui.create.div("");
 		if (get.is.phoneLayout()) {
 			list1.style.height = "110px";
@@ -1189,7 +1197,7 @@ export class Click {
 		const srcBase = `${lib.assetURL}image/emotion/`;
 		for (const folder in _status.emotion_cache) {
 			const emotionPack = ui.create.div(".card.fullskin", `<img src="${srcBase}${folder}/1.gif" width="50" height="50">`, function () {
-				emotionTitle.innerHTML = get.translation(this.pack);
+				tabEmotion.innerHTML = "表情 › " + get.translation(this.pack);
 				createEmotion(this.pack);
 				list1.remove();
 				uiintro.add(list2);
