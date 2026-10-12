@@ -1244,15 +1244,32 @@ export class Click {
 			}
 		};
 		// 按 lib.quickVoiceGroups 分段显示，每段一个标题、若干可换行的"气泡"；
-		// 没有分组信息时退化为单段
+		// 没有分组信息时退化为单段。
+		// 一组的语音 = 从它的 start 到下一组 start 之前的各条（去掉被别的组 extra 认领走的），加上它自己的 extra
 		const voiceGroups = Array.isArray(lib.quickVoiceGroups) && lib.quickVoiceGroups.length ? lib.quickVoiceGroups : [{ name: "", start: 0 }];
+		const claimedVoices = new Set(voiceGroups.flatMap(group => group.extra || []));
 		for (let g = 0; g < voiceGroups.length; g++) {
 			const start = voiceGroups[g].start;
 			const end = g + 1 < voiceGroups.length ? voiceGroups[g + 1].start : lib.quickVoice.length;
+			const indexes = [];
+			for (let i = start; i < end; i++) {
+				if (!claimedVoices.has(i)) {
+					indexes.push(i);
+				}
+			}
+			for (const i of voiceGroups[g].extra || []) {
+				if (i >= 0 && i < lib.quickVoice.length) {
+					indexes.push(i);
+				}
+			}
+			if (!indexes.length) {
+				continue;
+			}
+			indexes.sort((a, b) => a - b);
 			if (voiceGroups[g].name) {
 				list3.appendChild(ui.create.div(".text.center.quickvoice-group", voiceGroups[g].name));
 			}
-			for (let i = start; i < end; i++) {
+			for (const i of indexes) {
 				const node = ui.create.div(".text.chat.quickvoice", sendQuickVoice);
 				node.innerHTML = lib.quickVoice[i];
 				list3.appendChild(node);
