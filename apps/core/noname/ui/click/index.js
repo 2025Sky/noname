@@ -1019,11 +1019,17 @@ export class Click {
 			e.stopPropagation();
 		});
 
+		// 弹窗顶部离窗口顶 50px、底部留 20px，输入框、标题和边距共约 103px，
+		// 剩下的高度分给聊天记录区和下方的表情 / 快捷语音区，窗口较矮时自动收窄，避免超出窗口底部
+		const popupRoom = ui.window.offsetHeight - 50 - 20 - 103;
+		const historyHeight = Math.max(110, Math.min(300, Math.round(popupRoom * 0.55)));
+		const panelHeight = Math.max(110, Math.min(240, popupRoom - historyHeight));
+
 		var list = ui.create.div(".caption");
 		if (get.is.phoneLayout()) {
 			list.style.maxHeight = "110px";
 		} else {
-			list.style.maxHeight = "220px";
+			list.style.maxHeight = historyHeight + "px";
 		}
 		list.style.overflow = "scroll";
 		lib.setScroll(list);
@@ -1129,7 +1135,7 @@ export class Click {
 		if (get.is.phoneLayout()) {
 			list1.style.height = "110px";
 		} else {
-			list1.style.height = "150px";
+			list1.style.height = panelHeight + "px";
 		}
 		list1.style.overflow = "scroll";
 		lib.setScroll(list1);
@@ -1139,7 +1145,7 @@ export class Click {
 		if (get.is.phoneLayout()) {
 			list2.style.height = "110px";
 		} else {
-			list2.style.height = "150px";
+			list2.style.height = panelHeight + "px";
 		}
 		list2.style.overflow = "scroll";
 		lib.setScroll(list2);
@@ -1199,7 +1205,7 @@ export class Click {
 		if (get.is.phoneLayout()) {
 			list3.style.height = "110px";
 		} else {
-			list3.style.height = "220px";
+			list3.style.height = panelHeight + "px";
 		}
 		list3.style.overflow = "scroll";
 		lib.setScroll(list3);
