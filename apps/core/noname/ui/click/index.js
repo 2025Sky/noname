@@ -1115,7 +1115,8 @@ export class Click {
 		};
 		uiintro._heightfixed = true;
 		// 输入框下面两个并排的标签：表情 / 快捷语音。
-		// 在某个表情包里面时，“表情”标签会显示成“表情 › 包名”，点它回到表情包列表
+		// 在某个表情包里面时，“表情”标签会显示成“表情 › 包名”，点它回到表情包列表；
+		// 在某个语音分类里面时，“快捷语音”标签会显示成“‹ 分类名”，点它回到分类按钮页
 		var tabEmotion = ui.create.div(".chat-tab", "表情", function () {
 			showTab("emotion");
 		});
@@ -1131,14 +1132,21 @@ export class Click {
 			tabEmotion.classList.toggle("active", name == "emotion");
 			tabVoice.classList.toggle("active", name == "voice");
 			tabEmotion.innerHTML = "表情";
+			tabVoice.innerHTML = "快捷语音";
 			list1.remove();
 			list2.remove();
 			list3.remove();
+			if (list4) {
+				list4.remove();
+				list4 = null;
+			}
 			while (list2.childNodes.length) {
 				list2.firstChild.remove();
 			}
 			uiintro.add(name == "voice" ? list3 : list1);
 		};
+		// 当前打开的某个语音分类的语音列表（没打开分类时为 null）
+		var list4 = null;
 		var list1 = ui.create.div("");
 		if (get.is.phoneLayout()) {
 			list1.style.height = "110px";
@@ -1243,11 +1251,11 @@ export class Click {
 				player.chat(str);
 			}
 		};
-		// 按 lib.quickVoiceGroups 分段显示，每段一个标题、若干可换行的"气泡"；
-		// 没有分组信息时退化为单段。
-		// 一组的语音 = 从它的 start 到下一组 start 之前的各条（去掉被别的组 extra 认领走的），加上它自己的 extra
+		// 按 lib.quickVoiceGroups 分类。一组的语音 = 从它的 start 到下一组 start 之前的各条
+		// （去掉被别的组 extra 认领走的），加上它自己的 extra。没有分组信息时退化为单个分类
 		const voiceGroups = Array.isArray(lib.quickVoiceGroups) && lib.quickVoiceGroups.length ? lib.quickVoiceGroups : [{ name: "", start: 0 }];
 		const claimedVoices = new Set(voiceGroups.flatMap(group => group.extra || []));
+		const voiceCategories = [];
 		for (let g = 0; g < voiceGroups.length; g++) {
 			const start = voiceGroups[g].start;
 			const end = g + 1 < voiceGroups.length ? voiceGroups[g + 1].start : lib.quickVoice.length;
@@ -1262,17 +1270,48 @@ export class Click {
 					indexes.push(i);
 				}
 			}
-			if (!indexes.length) {
-				continue;
+			if (indexes.length) {
+				indexes.sort((a, b) => a - b);
+				voiceCategories.push({ name: voiceGroups[g].name, indexes });
 			}
-			indexes.sort((a, b) => a - b);
-			if (voiceGroups[g].name) {
-				list3.appendChild(ui.create.div(".text.center.quickvoice-group", voiceGroups[g].name));
+		}
+		// 一个分类的语音：若干可换行的“气泡”，点一下发送
+		const createVoiceList = function (indexes) {
+			const list = ui.create.div(".caption");
+			if (get.is.phoneLayout()) {
+				list.style.height = "110px";
+			} else {
+				list.style.height = panelHeight + "px";
 			}
+			list.style.overflow = "scroll";
+			lib.setScroll(list);
 			for (const i of indexes) {
 				const node = ui.create.div(".text.chat.quickvoice", sendQuickVoice);
 				node.innerHTML = lib.quickVoice[i];
-				list3.appendChild(node);
+				list.appendChild(node);
+			}
+			return list;
+		};
+		if (voiceCategories.length <= 1) {
+			// 没有分类可选，直接列出全部语音
+			for (const category of voiceCategories) {
+				for (const i of category.indexes) {
+					const node = ui.create.div(".text.chat.quickvoice", sendQuickVoice);
+					node.innerHTML = lib.quickVoice[i];
+					list3.appendChild(node);
+				}
+			}
+		} else {
+			// 每个分类一个按钮（名称 + 条数），点进去显示该分类的全部语音
+			for (const category of voiceCategories) {
+				const button = ui.create.div(".text.center.quickvoice-category", function () {
+					list4 = createVoiceList(category.indexes);
+					tabVoice.innerHTML = "‹ " + category.name;
+					list3.remove();
+					uiintro.add(list4);
+				});
+				button.innerHTML = category.name + '<span class="quickvoice-count">' + category.indexes.length + "</span>";
+				list3.appendChild(button);
 			}
 		}
 		list3.scrollTop = 0;
